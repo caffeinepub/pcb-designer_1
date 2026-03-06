@@ -149,7 +149,10 @@ export default function PCBToolbar() {
         variant="outline"
         onClick={() => setLoadModalOpen(true)}
         className="h-8 px-3 text-xs font-mono gap-1.5 border-border hover:border-amber-DEFAULT/50"
-        style={{ background: "oklch(0.20 0.01 160)" }}
+        style={{
+          background: "oklch(0.20 0.01 160)",
+          color: "oklch(0.88 0.04 160)",
+        }}
       >
         <FolderOpen className="w-3.5 h-3.5" />
         Load
@@ -162,7 +165,10 @@ export default function PCBToolbar() {
         variant="outline"
         onClick={() => setTemplatesModalOpen(true)}
         className="h-8 px-3 text-xs font-mono gap-1.5 border-border hover:border-amber-DEFAULT/50"
-        style={{ background: "oklch(0.20 0.01 160)" }}
+        style={{
+          background: "oklch(0.20 0.01 160)",
+          color: "oklch(0.88 0.04 160)",
+        }}
       >
         <LayoutTemplate className="w-3.5 h-3.5" />
         <span className="hidden sm:inline">Templates</span>
@@ -176,7 +182,10 @@ export default function PCBToolbar() {
             size="sm"
             variant="outline"
             className="h-8 px-3 text-xs font-mono gap-1.5 border-border hover:border-amber-DEFAULT/50"
-            style={{ background: "oklch(0.20 0.01 160)" }}
+            style={{
+              background: "oklch(0.20 0.01 160)",
+              color: "oklch(0.88 0.04 160)",
+            }}
           >
             <FilePlus className="w-3.5 h-3.5" />
             New
@@ -198,7 +207,10 @@ export default function PCBToolbar() {
           <AlertDialogFooter>
             <AlertDialogCancel
               className="border-border text-sm"
-              style={{ background: "oklch(0.20 0.01 160)" }}
+              style={{
+                background: "oklch(0.20 0.01 160)",
+                color: "oklch(0.88 0.04 160)",
+              }}
             >
               Cancel
             </AlertDialogCancel>

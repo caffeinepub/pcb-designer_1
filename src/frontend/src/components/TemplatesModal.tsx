@@ -206,7 +206,10 @@ export default function TemplatesModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               className="h-8 px-4 text-xs font-mono border-border"
-              style={{ background: "oklch(0.20 0.01 160)" }}
+              style={{
+                background: "oklch(0.20 0.01 160)",
+                color: "oklch(0.88 0.04 160)",
+              }}
             >
               Cancel
             </Button>
@@ -245,7 +248,10 @@ export default function TemplatesModal({
             <AlertDialogCancel
               onClick={handleCancelConfirm}
               className="border-border text-xs font-mono"
-              style={{ background: "oklch(0.20 0.01 160)" }}
+              style={{
+                background: "oklch(0.20 0.01 160)",
+                color: "oklch(0.88 0.04 160)",
+              }}
             >
               Cancel
             </AlertDialogCancel>

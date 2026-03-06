@@ -14,7 +14,14 @@ export function useGetCallerUserProfile() {
       return actor.getCallerUserProfile();
     },
     enabled: !!actor && !actorFetching,
-    retry: false,
+    retry: (failureCount, error) => {
+      // Don't retry permanent errors like "Design not found"
+      if (error instanceof Error && error.message.includes("Design not found"))
+        return false;
+      return failureCount < 3;
+    },
+    retryDelay: (attempt) => Math.min(500 * 2 ** attempt, 5000),
+    staleTime: 30_000,
   });
 
   return {

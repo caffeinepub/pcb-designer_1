@@ -1,5 +1,6 @@
 import { CircuitBoard, Cpu, Loader2 } from "lucide-react";
 import type React from "react";
+import { useEffect, useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useGetCallerUserProfile } from "../hooks/useQueries";
 import LoginButton from "./LoginButton";
@@ -17,10 +18,27 @@ export default function AuthenticatedApp({ children }: AuthenticatedAppProps) {
     data: userProfile,
     isLoading: profileLoading,
     isFetched,
+    isError: profileError,
   } = useGetCallerUserProfile();
 
+  // Safety valve: if profile loading takes >8 s, proceed anyway.
+  // The ProfileSetupModal handles the "no profile yet" case.
+  const [profileTimedOut, setProfileTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated || !profileLoading) {
+      setProfileTimedOut(false);
+      return;
+    }
+    const id = setTimeout(() => setProfileTimedOut(true), 8000);
+    return () => clearTimeout(id);
+  }, [isAuthenticated, profileLoading]);
+
   const showProfileSetup =
-    isAuthenticated && !profileLoading && isFetched && userProfile === null;
+    isAuthenticated &&
+    !profileLoading &&
+    (isFetched || profileTimedOut || profileError) &&
+    !userProfile;
 
   // Show loading while initializing auth
   if (isInitializing) {
@@ -136,8 +154,8 @@ export default function AuthenticatedApp({ children }: AuthenticatedAppProps) {
     );
   }
 
-  // Authenticated but loading profile
-  if (profileLoading) {
+  // Authenticated but loading profile (with timeout escape hatch)
+  if (profileLoading && !profileTimedOut) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
