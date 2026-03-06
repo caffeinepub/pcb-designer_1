@@ -26,6 +26,13 @@ const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 4.0;
 const ZOOM_STEP = 0.1;
 
+// mm per grid cell (standard 0.1" = 2.54mm perfboard pitch)
+const MM_PER_CELL = 2.54;
+// px per mm at 1:1 zoom
+const PX_PER_MM = GRID_SIZE / MM_PER_CELL;
+// Board outline starts 2 cells in from the canvas edge
+const BOARD_OFFSET_PX = GRID_SIZE * 2;
+
 interface DragState {
   isDragging: boolean;
   componentId: number | null;
@@ -50,6 +57,7 @@ export default function PCBCanvas() {
     rotateSelected,
     deleteSelected,
     setActiveComponentType,
+    boardSize,
   } = usePCBCanvas();
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -76,7 +84,22 @@ export default function PCBCanvas() {
     null,
   );
   const [isPanning, setIsPanning] = useState(false);
-  const [_panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [hoverGridPos, setHoverGridPos] = useState<{
+    col: number;
+    row: number;
+  } | null>(null);
+
+  // Pan tracking ref — avoids re-renders during pan
+  const panStartRef = useRef({
+    scrollLeft: 0,
+    scrollTop: 0,
+    mouseX: 0,
+    mouseY: 0,
+  });
+
+  // Space key tracking ref
+  const spaceHeldRef = useRef(false);
+  const [spaceHeld, setSpaceHeld] = useState(false);
 
   const snapToGrid = useCallback((px: number, py: number) => {
     return {
@@ -98,6 +121,35 @@ export default function PCBCanvas() {
     },
     [], // zoomRef is a ref so it's stable
   );
+
+  // Space key handlers for pan mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+      if (e.code === "Space" && !e.repeat) {
+        e.preventDefault();
+        spaceHeldRef.current = true;
+        setSpaceHeld(true);
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        spaceHeldRef.current = false;
+        setSpaceHeld(false);
+        setIsPanning(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
 
   // Wheel zoom handler
   useEffect(() => {
@@ -191,10 +243,22 @@ export default function PCBCanvas() {
     (e: React.MouseEvent) => {
       const coords = getSVGCoords(e);
 
+      // Pan: compute delta from stored start and scroll
       if (isPanning) {
-        setPanStart({ x: e.clientX, y: e.clientY });
+        const scrollEl = scrollContainerRef.current;
+        if (scrollEl) {
+          const dx = e.clientX - panStartRef.current.mouseX;
+          const dy = e.clientY - panStartRef.current.mouseY;
+          scrollEl.scrollLeft = panStartRef.current.scrollLeft - dx;
+          scrollEl.scrollTop = panStartRef.current.scrollTop - dy;
+        }
         return;
       }
+
+      // Update hover grid position
+      const col = Math.floor(coords.x / GRID_SIZE);
+      const row = Math.floor(coords.y / GRID_SIZE);
+      setHoverGridPos({ col, row });
 
       if (activeComponentType) {
         const snapped = snapToGrid(coords.x, coords.y);
@@ -260,9 +324,18 @@ export default function PCBCanvas() {
   );
 
   const handleSVGMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+    const scrollEl = scrollContainerRef.current;
+    // Middle mouse button OR Space+left-click → start panning
+    if (e.button === 1 || (e.button === 0 && spaceHeldRef.current)) {
+      if (scrollEl) {
+        panStartRef.current = {
+          scrollLeft: scrollEl.scrollLeft,
+          scrollTop: scrollEl.scrollTop,
+          mouseX: e.clientX,
+          mouseY: e.clientY,
+        };
+      }
       setIsPanning(true);
-      setPanStart({ x: e.clientX, y: e.clientY });
       e.preventDefault();
     }
   }, []);
@@ -270,6 +343,8 @@ export default function PCBCanvas() {
   const handleComponentMouseDown = useCallback(
     (e: React.MouseEvent, component: PlacedComponent) => {
       if (activeComponentType) return;
+      // If panning, don't start a component drag
+      if (spaceHeldRef.current || e.button === 1) return;
       e.stopPropagation();
       const coords = getSVGCoords(e);
       setDragState({
@@ -417,15 +492,133 @@ export default function PCBCanvas() {
     );
   };
 
+  const renderBoardOutline = (): ReactElement | null => {
+    if (!boardSize || boardSize.widthMm <= 0 || boardSize.heightMm <= 0)
+      return null;
+
+    const widthPx = Math.min(
+      boardSize.widthMm * PX_PER_MM,
+      CANVAS_WIDTH - BOARD_OFFSET_PX - 4,
+    );
+    const heightPx = Math.min(
+      boardSize.heightMm * PX_PER_MM,
+      CANVAS_HEIGHT - BOARD_OFFSET_PX - 4,
+    );
+
+    const x = BOARD_OFFSET_PX;
+    const y = BOARD_OFFSET_PX;
+
+    return (
+      <g style={{ pointerEvents: "none" }}>
+        {/* Dashed board outline */}
+        <rect
+          x={x}
+          y={y}
+          width={widthPx}
+          height={heightPx}
+          fill="none"
+          stroke="rgba(255,255,255,0.75)"
+          strokeDasharray="8,5"
+          strokeWidth={1.5}
+          rx={2}
+        />
+        {/* Size label inside top-left corner */}
+        <text
+          x={x + 6}
+          y={y + 14}
+          fill="rgba(255,255,255,0.65)"
+          fontSize="10"
+          fontFamily="monospace"
+        >
+          {boardSize.label}
+        </text>
+        {/* Small corner tick marks for alignment */}
+        <line
+          x1={x}
+          y1={y + 8}
+          x2={x}
+          y2={y}
+          stroke="rgba(255,255,255,0.5)"
+          strokeWidth={1}
+        />
+        <line
+          x1={x}
+          y1={y}
+          x2={x + 8}
+          y2={y}
+          stroke="rgba(255,255,255,0.5)"
+          strokeWidth={1}
+        />
+        <line
+          x1={x + widthPx - 8}
+          y1={y}
+          x2={x + widthPx}
+          y2={y}
+          stroke="rgba(255,255,255,0.5)"
+          strokeWidth={1}
+        />
+        <line
+          x1={x + widthPx}
+          y1={y}
+          x2={x + widthPx}
+          y2={y + 8}
+          stroke="rgba(255,255,255,0.5)"
+          strokeWidth={1}
+        />
+        <line
+          x1={x}
+          y1={y + heightPx - 8}
+          x2={x}
+          y2={y + heightPx}
+          stroke="rgba(255,255,255,0.5)"
+          strokeWidth={1}
+        />
+        <line
+          x1={x}
+          y1={y + heightPx}
+          x2={x + 8}
+          y2={y + heightPx}
+          stroke="rgba(255,255,255,0.5)"
+          strokeWidth={1}
+        />
+        <line
+          x1={x + widthPx - 8}
+          y1={y + heightPx}
+          x2={x + widthPx}
+          y2={y + heightPx}
+          stroke="rgba(255,255,255,0.5)"
+          strokeWidth={1}
+        />
+        <line
+          x1={x + widthPx}
+          y1={y + heightPx - 8}
+          x2={x + widthPx}
+          y2={y + heightPx}
+          stroke="rgba(255,255,255,0.5)"
+          strokeWidth={1}
+        />
+      </g>
+    );
+  };
+
+  // Cursor: crosshair when placing, grabbing when dragging/panning, grab when space held
   const cursorStyle = activeComponentType
     ? "crosshair"
     : dragState.isDragging
       ? "grabbing"
       : isPanning
-        ? "grab"
-        : "default";
+        ? "grabbing"
+        : spaceHeld
+          ? "grab"
+          : "default";
 
   const zoomPct = Math.round(zoomLevel * 100);
+
+  // Selected component's grid position
+  const selectedComp =
+    selectedId !== null
+      ? placedComponents.find((c) => c.id === selectedId)
+      : null;
 
   return (
     <div
@@ -434,7 +627,36 @@ export default function PCBCanvas() {
       style={{ background: "oklch(0.12 0.01 160)" }}
     >
       {/* Canvas info bar */}
-      <div className="absolute top-2 right-3 z-10 flex items-center gap-2 text-xs font-mono select-none">
+      <div className="absolute top-2 right-3 z-10 flex items-center gap-2 text-xs font-mono select-none flex-wrap justify-end">
+        {/* Pin coordinate readout */}
+        {hoverGridPos !== null && (
+          <div
+            data-ocid="canvas.pin_coords"
+            className="flex items-center gap-2 rounded px-2 py-0.5"
+            style={{
+              background: "oklch(0.17 0.01 160)",
+              border: "1px solid oklch(0.28 0.02 160)",
+              color: "oklch(0.72 0.16 85)",
+            }}
+          >
+            <span title="Current pin position under cursor">
+              Pin ({hoverGridPos.col}, {hoverGridPos.row})
+            </span>
+            {selectedComp && (
+              <>
+                <span style={{ color: "oklch(0.38 0.02 160)" }}>·</span>
+                <span
+                  style={{ color: "oklch(0.78 0.04 160)" }}
+                  title="Selected component position"
+                >
+                  Selected: ({selectedComp.position.x},{" "}
+                  {selectedComp.position.y})
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Zoom controls */}
         <div
           className="flex items-center gap-0.5 rounded"
@@ -496,6 +718,14 @@ export default function PCBCanvas() {
         </div>
       </div>
 
+      {/* Pan hint at bottom-left */}
+      <div
+        className="absolute bottom-2 left-3 z-10 text-xs font-mono select-none opacity-40 pointer-events-none"
+        style={{ color: "oklch(0.65 0.02 160)" }}
+      >
+        Middle-mouse or Space+drag to pan
+      </div>
+
       {/* SVG Canvas — scroll container */}
       <div
         ref={scrollContainerRef}
@@ -530,6 +760,7 @@ export default function PCBCanvas() {
             onMouseDown={handleSVGMouseDown}
             onMouseLeave={() => {
               setGhostPos(null);
+              setHoverGridPos(null);
               if (dragState.isDragging) {
                 setDragState((prev) => ({ ...prev, isDragging: false }));
               }
@@ -587,6 +818,9 @@ export default function PCBCanvas() {
                 </g>
               );
             })}
+
+            {/* Board size outline — below components, above grid border */}
+            {renderBoardOutline()}
 
             {/* Placed components */}
             {placedComponents.map((comp) => (

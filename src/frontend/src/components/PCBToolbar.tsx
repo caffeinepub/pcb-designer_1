@@ -12,6 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Cpu,
   FilePlus,
   FolderOpen,
@@ -24,10 +31,58 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import type { Component, PCBDesign } from "../backend";
 import { getComponentById } from "../constants/componentLibrary";
+import type { BoardSize } from "../contexts/PCBCanvasContext";
 import { usePCBCanvas } from "../contexts/PCBCanvasContext";
 import { useSaveDesign } from "../hooks/useQueries";
 import LoadDesignsModal from "./LoadDesignsModal";
 import TemplatesModal from "./TemplatesModal";
+
+const UK_BOARD_SIZES: (BoardSize & { value: string })[] = [
+  { value: "none", label: "No Board Size", widthMm: 0, heightMm: 0 },
+  {
+    value: "eurocard",
+    label: "100×160mm (Eurocard)",
+    widthMm: 100,
+    heightMm: 160,
+  },
+  {
+    value: "half-euro",
+    label: "100×80mm (Half Euro)",
+    widthMm: 100,
+    heightMm: 80,
+  },
+  {
+    value: "arduino-uno",
+    label: "68.6×53.3mm (Arduino Uno)",
+    widthMm: 68.6,
+    heightMm: 53.3,
+  },
+  {
+    value: "raspberry-pi",
+    label: "65×56mm (Raspberry Pi)",
+    widthMm: 65,
+    heightMm: 56,
+  },
+  {
+    value: "proto-100",
+    label: "100×100mm (Proto)",
+    widthMm: 100,
+    heightMm: 100,
+  },
+  {
+    value: "mini-proto",
+    label: "50×50mm (Mini Proto)",
+    widthMm: 50,
+    heightMm: 50,
+  },
+  {
+    value: "double-euro",
+    label: "160×100mm (Double Euro)",
+    widthMm: 160,
+    heightMm: 100,
+  },
+  { value: "custom", label: "Custom...", widthMm: -1, heightMm: -1 },
+];
 
 export default function PCBToolbar() {
   const {
@@ -41,11 +96,15 @@ export default function PCBToolbar() {
     clearCanvas,
     activeComponentType,
     setActiveComponentType,
+    setBoardSize,
   } = usePCBCanvas();
 
   const saveDesignMutation = useSaveDesign();
   const [loadModalOpen, setLoadModalOpen] = useState(false);
   const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
+  const [selectedBoardValue, setSelectedBoardValue] = useState("none");
+  const [customWidth, setCustomWidth] = useState("100");
+  const [customHeight, setCustomHeight] = useState("100");
 
   const handleSave = async () => {
     if (!designName.trim()) {
@@ -99,9 +158,40 @@ export default function PCBToolbar() {
     loadDesign(components, design.name);
   };
 
+  const handleBoardSizeChange = (value: string) => {
+    setSelectedBoardValue(value);
+    if (value === "none") {
+      setBoardSize(null);
+      return;
+    }
+    if (value === "custom") {
+      // Custom: apply current custom dimensions
+      const w = Number.parseFloat(customWidth) || 100;
+      const h = Number.parseFloat(customHeight) || 100;
+      setBoardSize({ label: `${w}×${h}mm`, widthMm: w, heightMm: h });
+      return;
+    }
+    const found = UK_BOARD_SIZES.find((s) => s.value === value);
+    if (found) {
+      setBoardSize({
+        label: found.label,
+        widthMm: found.widthMm,
+        heightMm: found.heightMm,
+      });
+    }
+  };
+
+  const applyCustomSize = () => {
+    const w = Number.parseFloat(customWidth) || 100;
+    const h = Number.parseFloat(customHeight) || 100;
+    if (w > 0 && h > 0) {
+      setBoardSize({ label: `${w}×${h}mm`, widthMm: w, heightMm: h });
+    }
+  };
+
   return (
     <header
-      className="flex items-center gap-2 px-4 py-2 border-b border-border flex-shrink-0"
+      className="flex items-center gap-2 px-4 py-2 border-b border-border flex-shrink-0 flex-wrap"
       style={{ background: "oklch(0.14 0.01 160)" }}
     >
       {/* Logo */}
@@ -173,6 +263,100 @@ export default function PCBToolbar() {
         <LayoutTemplate className="w-3.5 h-3.5" />
         <span className="hidden sm:inline">Templates</span>
       </Button>
+
+      {/* Board Size Selector */}
+      <div className="flex items-center gap-1.5">
+        <Select
+          value={selectedBoardValue}
+          onValueChange={handleBoardSizeChange}
+        >
+          <SelectTrigger
+            data-ocid="toolbar.board_size_select"
+            className="h-8 w-48 text-xs font-mono border-border focus:ring-1 focus:ring-amber-DEFAULT/60"
+            style={{
+              background: "oklch(0.20 0.01 160)",
+              color: "oklch(0.88 0.04 160)",
+              borderColor: "oklch(0.28 0.02 160)",
+            }}
+          >
+            <SelectValue placeholder="Board size..." />
+          </SelectTrigger>
+          <SelectContent
+            style={{
+              background: "oklch(0.17 0.01 160)",
+              borderColor: "oklch(0.28 0.02 160)",
+              color: "oklch(0.88 0.04 160)",
+            }}
+          >
+            {UK_BOARD_SIZES.map((size) => (
+              <SelectItem
+                key={size.value}
+                value={size.value}
+                className="text-xs font-mono focus:bg-white/10"
+                style={{ color: "oklch(0.88 0.04 160)" }}
+              >
+                {size.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Custom size inputs — only shown when custom is selected */}
+        {selectedBoardValue === "custom" && (
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              value={customWidth}
+              onChange={(e) => setCustomWidth(e.target.value)}
+              onBlur={applyCustomSize}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applyCustomSize();
+              }}
+              placeholder="W"
+              className="h-8 w-16 text-xs font-mono border-border text-center"
+              style={{
+                background: "oklch(0.20 0.01 160)",
+                color: "oklch(0.88 0.04 160)",
+                borderColor: "oklch(0.28 0.02 160)",
+              }}
+              title="Width in mm"
+              min="1"
+              max="500"
+            />
+            <span
+              className="text-xs font-mono"
+              style={{ color: "oklch(0.55 0.02 160)" }}
+            >
+              ×
+            </span>
+            <Input
+              type="number"
+              value={customHeight}
+              onChange={(e) => setCustomHeight(e.target.value)}
+              onBlur={applyCustomSize}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applyCustomSize();
+              }}
+              placeholder="H"
+              className="h-8 w-16 text-xs font-mono border-border text-center"
+              style={{
+                background: "oklch(0.20 0.01 160)",
+                color: "oklch(0.88 0.04 160)",
+                borderColor: "oklch(0.28 0.02 160)",
+              }}
+              title="Height in mm"
+              min="1"
+              max="500"
+            />
+            <span
+              className="text-xs font-mono"
+              style={{ color: "oklch(0.55 0.02 160)" }}
+            >
+              mm
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* New Board */}
       <AlertDialog>

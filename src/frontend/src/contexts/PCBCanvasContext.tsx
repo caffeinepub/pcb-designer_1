@@ -2,12 +2,19 @@ import type React from "react";
 import { createContext, useCallback, useContext, useReducer } from "react";
 import type { PCBPosition, PCBRotation, PlacedComponent } from "../types/pcb";
 
+export interface BoardSize {
+  label: string;
+  widthMm: number;
+  heightMm: number;
+}
+
 interface PCBCanvasState {
   placedComponents: PlacedComponent[];
   selectedId: number | null;
   activeComponentType: string | null;
   designName: string;
   nextId: number;
+  boardSize: BoardSize | null;
 }
 
 type PCBCanvasAction =
@@ -22,7 +29,8 @@ type PCBCanvasAction =
       type: "LOAD_DESIGN";
       payload: { components: PlacedComponent[]; name: string };
     }
-  | { type: "CLEAR_CANVAS" };
+  | { type: "CLEAR_CANVAS" }
+  | { type: "SET_BOARD_SIZE"; payload: { boardSize: BoardSize | null } };
 
 function reducer(
   state: PCBCanvasState,
@@ -108,6 +116,9 @@ function reducer(
         nextId: 1,
       };
     }
+    case "SET_BOARD_SIZE": {
+      return { ...state, boardSize: action.payload.boardSize };
+    }
     default:
       return state;
   }
@@ -119,6 +130,7 @@ const initialState: PCBCanvasState = {
   activeComponentType: null,
   designName: "Untitled Board",
   nextId: 1,
+  boardSize: null,
 };
 
 interface PCBCanvasContextValue extends PCBCanvasState {
@@ -133,6 +145,7 @@ interface PCBCanvasContextValue extends PCBCanvasState {
   clearCanvas: () => void;
   rotateSelected: () => void;
   deleteSelected: () => void;
+  setBoardSize: (size: BoardSize | null) => void;
 }
 
 const PCBCanvasContext = createContext<PCBCanvasContextValue | undefined>(
@@ -193,6 +206,10 @@ export function PCBCanvasProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.selectedId]);
 
+  const setBoardSize = useCallback((size: BoardSize | null) => {
+    dispatch({ type: "SET_BOARD_SIZE", payload: { boardSize: size } });
+  }, []);
+
   return (
     <PCBCanvasContext.Provider
       value={{
@@ -208,6 +225,7 @@ export function PCBCanvasProvider({ children }: { children: React.ReactNode }) {
         clearCanvas,
         rotateSelected,
         deleteSelected,
+        setBoardSize,
       }}
     >
       {children}
