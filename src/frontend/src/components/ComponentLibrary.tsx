@@ -895,7 +895,7 @@ export default function ComponentLibrary() {
                   type="button"
                   onClick={() => toggleCategory(category.name)}
                   className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold tracking-wider uppercase hover:bg-white/5 transition-colors"
-                  style={{ color: "oklch(0.55 0.03 160)" }}
+                  style={{ color: "oklch(0.65 0.04 160)" }}
                 >
                   <span>{category.name}</span>
                   {isExpanded ? (
@@ -926,10 +926,13 @@ export default function ComponentLibrary() {
                           </div>
                           <span
                             className={`text-xs leading-tight font-mono ${
-                              isActive
-                                ? "text-amber-DEFAULT font-medium"
-                                : "text-foreground/80"
+                              isActive ? "font-medium" : ""
                             }`}
+                            style={{
+                              color: isActive
+                                ? "oklch(0.72 0.16 85)"
+                                : "oklch(0.88 0.02 160)",
+                            }}
                           >
                             {item.name}
                           </span>

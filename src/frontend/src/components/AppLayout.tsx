@@ -1,6 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
 import { CircuitBoard, User } from "lucide-react";
 import React from "react";
+import { usePCBCanvas } from "../contexts/PCBCanvasContext";
+import { useAutosaveAndLogout } from "../hooks/useAutosaveAndLogout";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useGetCallerUserProfile } from "../hooks/useQueries";
 import ComponentLibrary from "./ComponentLibrary";
@@ -9,8 +11,15 @@ import PCBCanvas from "./PCBCanvas";
 import PCBToolbar from "./PCBToolbar";
 
 export default function AppLayout() {
-  useInternetIdentity();
+  const { clear } = useInternetIdentity();
   const { data: userProfile } = useGetCallerUserProfile();
+  const { placedComponents, designName } = usePCBCanvas();
+
+  useAutosaveAndLogout({
+    placedComponents,
+    designName,
+    onLogout: clear,
+  });
 
   return (
     <div

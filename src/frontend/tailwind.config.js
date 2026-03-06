@@ -82,10 +82,10 @@ export default {
                     dark: 'oklch(0.12 0.01 160)',
                 },
                 amber: {
-                    DEFAULT: 'oklch(0.72 0.16 85)',
-                    light: 'oklch(0.82 0.14 85)',
-                    dark: 'oklch(0.58 0.18 85)',
-                    muted: 'oklch(0.72 0.08 85)',
+                    DEFAULT: 'oklch(0.72 0.16 85 / <alpha-value>)',
+                    light: 'oklch(0.82 0.14 85 / <alpha-value>)',
+                    dark: 'oklch(0.58 0.18 85 / <alpha-value>)',
+                    muted: 'oklch(0.72 0.08 85 / <alpha-value>)',
                 },
             },
             borderRadius: {

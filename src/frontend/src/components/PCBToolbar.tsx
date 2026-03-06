@@ -238,6 +238,7 @@ export default function PCBToolbar() {
         onClick={rotateSelected}
         disabled={selectedId === null}
         className="h-8 px-2.5 text-xs font-mono gap-1.5 disabled:opacity-30"
+        style={{ color: "oklch(0.78 0.03 160)" }}
         title="Rotate selected (R)"
       >
         <RotateCw className="w-3.5 h-3.5" />
@@ -251,6 +252,7 @@ export default function PCBToolbar() {
         onClick={deleteSelected}
         disabled={selectedId === null}
         className="h-8 px-2.5 text-xs font-mono gap-1.5 disabled:opacity-30 hover:text-destructive"
+        style={{ color: "oklch(0.78 0.03 160)" }}
         title="Delete selected (Del)"
       >
         <Trash2 className="w-3.5 h-3.5" />

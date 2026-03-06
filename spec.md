@@ -1,70 +1,37 @@
 # PCB Designer
 
 ## Current State
-The app is a full-stack PCB layout tool with:
-- A visual canvas for placing and arranging components on a grid
-- Save/load designs via ICP backend (per-user storage)
-- A component library in `componentLibrary.ts` with categories: Passives (resistor, capacitor, inductor, crystal), Semiconductors (diode, LED, NPN, PNP, voltage regulator), ICs (DIP-8, DIP-14, DIP-16), Connectors (2/4/8-pin, pushbutton, switch)
-- SVG schematic symbols rendered in `ComponentRenderer.tsx` for each type
-- `ComponentCategory` type is a union of four string literals
+- Full PCB layout app with visual SVG canvas, component library (incl. Tesla Coil components), save/load designs, templates.
+- Canvas is a fixed-size SVG (CANVAS_WIDTH x CANVAS_HEIGHT) inside a scrollable container — no zoom capability.
+- Auth via Internet Identity (`useInternetIdentity` hook with `clear()` for logout). Idle handling is disabled in the AuthClient (`disableIdle: true`).
+- No autosave mechanism and no inactivity/tab-close logout.
+- `PCBCanvas.tsx` handles mouse events and SVG rendering.
+- `PCBCanvasContext.tsx` holds canvas state.
+- `PCBToolbar.tsx` has a Save button calling `useSaveDesign` mutation.
+- `AuthenticatedApp.tsx` wraps the app with auth gating.
 
 ## Requested Changes (Diff)
 
 ### Add
-1. **New component library entries** (global starter library) in `componentLibrary.ts`:
-   - `ne555` — NE555 Timer IC (ICs category, DIP-8 style, 4×5 grid, dark body)
-   - `cap_ceramic_100nf` — Decoupling Cap 100nF (Passives category, ceramic capacitor symbol, label "100nF")
-   - `cap_ceramic_10nf` — Decoupling Cap 10nF (Passives category, ceramic capacitor symbol, label "10nF")
-   - `cap_elec_100uf` — Timing Capacitor 100µF (Passives category, polarized/electrolytic capacitor symbol with + marker, label "100µF")
-   - `pot_p1` — Potentiometer P1 ON-time (Passives category, resistor-with-arrow symbol, label "P1")
-   - `pot_p2` — Potentiometer P2 OFF-time (Passives category, resistor-with-arrow symbol, label "P2")
-   - `npn_power` — NPN Power Transistor Q1 (Semiconductors category, standard NPN transistor symbol, 3 pins B/C/E, label "Q1 NPN")
-   - `screw_term_2pin` — Screw Terminal 2-pin (Connectors category, 2-pin screw terminal symbol distinct from generic connector, label "TERM2")
-   - `switch_spst` — SPST Switch S1 (Connectors category, standard SPST switch symbol, label "S1")
-   - `switch_timer` — Timer Switch S2 (Connectors category, standard SPST switch symbol, label "S2")
-
-2. **New SVG schematic symbols** in `ComponentRenderer.tsx` for each new type:
-   - `ne555`: DIP-8 IC body (same style as existing DIP8) but labelled "NE555" inside
-   - `cap_ceramic_100nf` / `cap_ceramic_10nf`: Standard ceramic capacitor symbol (two parallel lines, no polarity mark); value label shown
-   - `cap_elec_100uf`: Polarised electrolytic capacitor symbol (one straight line + one curved line); "+" polarity marker
-   - `pot_p1` / `pot_p2`: Resistor body (rectangle) with an arrow through it diagonally (standard variable resistor/potentiometer IEC symbol); label P1 or P2
-   - `npn_power`: Same NPN circle symbol as existing `npn` but with a label "Q1"
-   - `screw_term_2pin`: Rectangle body with two circles inside (screw heads), label "TERM"
-   - `switch_spst` / `switch_timer`: Same SPST switch symbol as existing `switch`
-
-3. **Update `ComponentCategory` type** in `pcb.ts` to add `'Templates'` as a valid category (used for template display only, not for new component types).
-
-4. **"Tesla Coil (12V)" design template** accessible from the toolbar Load menu or a new "Templates" button:
-   - Pre-placed components at sensible grid positions matching the board diagram layout (70mm × 90mm proportions):
-     - Screw Terminal (power input) at approx grid (2, 5)
-     - Screw Terminal (HV module output) at approx grid (22, 5)
-     - NE555 Timer at approx grid (8, 7)
-     - Decoupling Cap 100nF at approx grid (8, 3)
-     - Decoupling Cap 10nF at approx grid (12, 3)
-     - Potentiometer P1 at approx grid (7, 14)
-     - Potentiometer P2 at approx grid (11, 14)
-     - Timing Capacitor 100µF at approx grid (15, 14)
-     - NPN Power Transistor at approx grid (18, 7)
-     - Switch S1 at approx grid (2, 12)
-     - Switch S2 at approx grid (2, 16)
-   - Template does NOT get saved to backend — it loads locally as a starting point the user can then save under their own name.
-
-5. **Templates button in toolbar** (or integrated into Load modal) — a "Templates" button that pops open a simple modal/dropdown listing available local templates (starting with "Tesla Coil (12V)"). Clicking a template loads it onto the canvas.
+1. **Zoom on the PCB canvas** — mouse-wheel zoom (Ctrl+scroll or plain scroll on the canvas), zoom in/out buttons in the canvas info bar (e.g. "+" / "−" / "100%" reset), zoom range 25%–400%, zoom centred on cursor position. All mouse coordinates used for component placement and dragging must account for the current zoom level.
+2. **Autosave on tab close or navigating away** — use the `beforeunload` event to trigger a save of the current design if there are placed components and the design has a name (non-empty, non-"Untitled Board"). Show no toast for this silent save.
+3. **Autosave + logout after 15 minutes of inactivity** — track user activity (mousemove, keydown, click, scroll) globally. Reset a 15-minute inactivity timer on any activity. On timeout: save the current design silently (same condition as above), then call `clear()` from `useInternetIdentity` to log out, and show a brief dismissible notice on the login screen ("You were logged out due to inactivity. Your design was saved.").
 
 ### Modify
-- `componentLibrary.ts`: Append 10 new entries to `COMPONENT_LIBRARY` array; add a "Templates" category group to `COMPONENT_CATEGORIES` (optional, or just ensure new items show under their respective categories).
-- `ComponentRenderer.tsx`: Add new `case` blocks in `ComponentSymbol` switch for each new component type ID.
-- `PCBToolbar.tsx`: Add a "Templates" button (with a layout/template icon) that opens a templates modal.
-- `PCBCanvasContext.tsx` / canvas context: The `loadDesign` function should accept a template load (local, no backend fetch) — this already exists as a local state update, so no change needed there.
+- `PCBCanvas.tsx`: add zoom state (scale factor), apply CSS `transform: scale(scale)` or SVG `viewBox` manipulation to the SVG, update all coordinate helpers (`getSVGCoords`, `snapToGrid`) to divide by scale. Add zoom controls overlay inside the canvas container.
+- `PCBToolbar.tsx` or a new hook: expose `handleSave` logic (or extract to a reusable `useSaveCurrentDesign` hook) so it can be called from the inactivity/tab-close handlers.
+- `AuthenticatedApp.tsx`: add inactivity timer logic and `beforeunload` listener, calling the save+logout on timeout. Optionally accept an `inactivityMessage` prop/state to show on the login screen after auto-logout.
 
 ### Remove
 - Nothing removed.
 
 ## Implementation Plan
-1. Update `pcb.ts`: add new component type IDs to the type definitions (no structural change needed since IDs are plain strings; verify `ComponentCategory` includes any new categories if needed).
-2. Update `componentLibrary.ts`: append the 10 new component entries under their respective categories; ensure `COMPONENT_CATEGORIES` groups them correctly.
-3. Update `ComponentRenderer.tsx`: add SVG case blocks for all 10 new component type IDs with appropriate schematic symbols.
-4. Add `teslaCoilTemplate.ts` (or similar) in `constants/`: define the pre-placed component list for the Tesla Coil (12V) template.
-5. Create `TemplatesModal.tsx` component: lists available templates, on select calls `loadDesign` with pre-placed components.
-6. Update `PCBToolbar.tsx`: add Templates button that opens `TemplatesModal`.
-7. Run validate (typecheck + lint + build) and fix any issues.
+1. Extract save logic into a reusable hook `useSaveCurrentDesign` (or inline callable fn) accessible outside toolbar.
+2. In `PCBCanvas.tsx`, add `zoomLevel` state (default 1.0, range 0.25–4.0). Apply scale via CSS transform on the SVG wrapper. Adjust `getSVGCoords` to divide pixel offsets by `zoomLevel`. Add zoom controls (+ / − / reset %) in the canvas info bar with `data-ocid` markers.
+3. In `AuthenticatedApp.tsx` (or a new `useInactivityLogout` hook), set up:
+   - Activity listener on `window` for `mousemove`, `keydown`, `click`, `scroll` — debounced reset of a 15-min `setTimeout`.
+   - On timeout: call silent save then `clear()`.
+   - `beforeunload` listener: call silent save synchronously (best-effort).
+   - After auto-logout, store a flag in `sessionStorage` and display a brief notice on the login screen.
+4. Add `data-ocid` markers to zoom controls.
+5. Validate (typecheck + lint + build).

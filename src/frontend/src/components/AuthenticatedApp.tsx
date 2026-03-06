@@ -1,4 +1,4 @@
-import { CircuitBoard, Cpu, Loader2 } from "lucide-react";
+import { CircuitBoard, Clock, Cpu, Loader2 } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
@@ -24,6 +24,19 @@ export default function AuthenticatedApp({ children }: AuthenticatedAppProps) {
   // Safety valve: if profile loading takes >5 s, proceed anyway.
   // The ProfileSetupModal handles the "no profile yet" case.
   const [profileTimedOut, setProfileTimedOut] = useState(false);
+
+  // Check for autologout flag from sessionStorage
+  const [showAutologoutNotice, setShowAutologoutNotice] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const flag = sessionStorage.getItem("pcb_autologout");
+      if (flag) {
+        setShowAutologoutNotice(true);
+        sessionStorage.removeItem("pcb_autologout");
+      }
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     // Reset timeout whenever authentication state or loading state changes
@@ -109,6 +122,24 @@ export default function AuthenticatedApp({ children }: AuthenticatedAppProps) {
               </p>
             </div>
           </div>
+
+          {/* Autologout notice */}
+          {showAutologoutNotice && (
+            <div
+              className="w-full flex items-start gap-2.5 rounded-lg px-4 py-3 text-xs font-mono text-left"
+              style={{
+                background: "oklch(0.20 0.04 85 / 0.25)",
+                border: "1px solid oklch(0.55 0.10 85 / 0.4)",
+                color: "oklch(0.82 0.08 85)",
+              }}
+            >
+              <Clock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <span>
+                You were logged out after 15 minutes of inactivity. Your design
+                was saved.
+              </span>
+            </div>
+          )}
 
           <div
             className="w-full rounded-lg p-6 border border-border space-y-4"
