@@ -94,7 +94,7 @@ export const COMPONENT_LIBRARY: ComponentLibraryItem[] = [
     symbol: "IC8",
     width: 4,
     height: 5,
-    color: "#404050",
+    color: "#8890b8",
   },
   {
     id: "ic_dip14",
@@ -103,7 +103,7 @@ export const COMPONENT_LIBRARY: ComponentLibraryItem[] = [
     symbol: "IC14",
     width: 4,
     height: 8,
-    color: "#404050",
+    color: "#8890b8",
   },
   {
     id: "ic_dip16",
@@ -112,7 +112,7 @@ export const COMPONENT_LIBRARY: ComponentLibraryItem[] = [
     symbol: "IC16",
     width: 4,
     height: 9,
-    color: "#404050",
+    color: "#8890b8",
   },
 
   // Connectors
@@ -170,7 +170,7 @@ export const COMPONENT_LIBRARY: ComponentLibraryItem[] = [
     symbol: "NE555",
     width: 4,
     height: 5,
-    color: "#404050",
+    color: "#8890b8",
   },
   {
     id: "cap_ceramic_100nf",

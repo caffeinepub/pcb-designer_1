@@ -15,18 +15,30 @@ export function useGetCallerUserProfile() {
     },
     enabled: !!actor && !actorFetching,
     retry: (failureCount, error) => {
-      // Don't retry permanent errors like "Design not found"
-      if (error instanceof Error && error.message.includes("Design not found"))
-        return false;
+      const msg = error instanceof Error ? error.message : String(error);
+      // Don't retry permanent errors
+      if (msg.includes("Design not found")) return false;
+      // Unauthorized = access control still initialising — retry quickly, up to 5 times
+      if (msg.toLowerCase().includes("unauthorized")) return failureCount < 5;
+      // Other transient errors — retry up to 3 times
       return failureCount < 3;
     },
-    retryDelay: (attempt) => Math.min(500 * 2 ** attempt, 5000),
+    retryDelay: (attempt, error) => {
+      const msg = error instanceof Error ? error.message : String(error);
+      // Fast retries for Unauthorized: 200ms, 400ms, 800ms, 1.2s, 2s
+      if (msg.toLowerCase().includes("unauthorized"))
+        return Math.min(200 * 2 ** attempt, 2000);
+      // Normal backoff for other errors
+      return Math.min(500 * 2 ** attempt, 5000);
+    },
     staleTime: 30_000,
   });
 
+  // Only show loading when the actor itself is still being fetched.
+  // Once the actor exists, let the query's own loading/error state drive the UI.
   return {
     ...query,
-    isLoading: actorFetching || query.isLoading,
+    isLoading: actorFetching || (!query.isFetched && query.isLoading),
     isFetched: !!actor && query.isFetched,
   };
 }

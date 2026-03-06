@@ -470,6 +470,360 @@ function ComponentIcon({ item }: { item: ComponentLibraryItem }) {
             />
           </>
         );
+      // Tesla Coil components
+      case "ne555": {
+        const ne555Pins = 4;
+        return (
+          <>
+            <rect
+              x={8}
+              y={4}
+              width={20}
+              height={size - 8}
+              fill={color}
+              opacity={0.2}
+              stroke={color}
+              strokeWidth={1.5}
+              rx={1}
+            />
+            <path
+              d={`M${cx - 6},4 Q${cx},8 ${cx + 6},4`}
+              fill="none"
+              stroke={color}
+              strokeWidth={1}
+            />
+            {Array.from({ length: ne555Pins }).map((_, i) => {
+              const ne555LibKey = `lib-ne555-pin-${String(i)}`;
+              return (
+                <React.Fragment key={ne555LibKey}>
+                  <line
+                    x1={0}
+                    y1={6 + i * 7}
+                    x2={8}
+                    y2={6 + i * 7}
+                    stroke={color}
+                    strokeWidth={1.5}
+                  />
+                  <line
+                    x1={28}
+                    y1={6 + i * 7}
+                    x2={36}
+                    y2={6 + i * 7}
+                    stroke={color}
+                    strokeWidth={1.5}
+                  />
+                </React.Fragment>
+              );
+            })}
+            <text
+              x={cx}
+              y={cy + 3}
+              textAnchor="middle"
+              fill={color}
+              fontSize="6"
+              fontFamily="IBM Plex Mono"
+              fontWeight="600"
+            >
+              555
+            </text>
+          </>
+        );
+      }
+      case "cap_ceramic_100nf":
+      case "cap_ceramic_10nf":
+        return (
+          <>
+            <line
+              x1={cx}
+              y1={2}
+              x2={cx}
+              y2={cy - 4}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={cx - 8}
+              y1={cy - 4}
+              x2={cx + 8}
+              y2={cy - 4}
+              stroke={color}
+              strokeWidth={2}
+            />
+            <line
+              x1={cx - 8}
+              y1={cy + 4}
+              x2={cx + 8}
+              y2={cy + 4}
+              stroke={color}
+              strokeWidth={2}
+            />
+            <line
+              x1={cx}
+              y1={cy + 4}
+              x2={cx}
+              y2={size - 2}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <text
+              x={cx + 10}
+              y={cy - 1}
+              fill={color}
+              fontSize="5"
+              fontFamily="IBM Plex Mono"
+            >
+              {item.id === "cap_ceramic_100nf" ? "100n" : "10n"}
+            </text>
+          </>
+        );
+      case "cap_elec_100uf":
+        return (
+          <>
+            <line
+              x1={cx}
+              y1={2}
+              x2={cx}
+              y2={cy - 4}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={cx - 8}
+              y1={cy - 4}
+              x2={cx + 8}
+              y2={cy - 4}
+              stroke={color}
+              strokeWidth={2}
+            />
+            <path
+              d={`M${cx - 8},${cy + 4} Q${cx},${cy + 1} ${cx + 8},${cy + 4}`}
+              fill="none"
+              stroke={color}
+              strokeWidth={2}
+            />
+            <line
+              x1={cx}
+              y1={cy + 4}
+              x2={cx}
+              y2={size - 2}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <text
+              x={cx + 10}
+              y={cy - 1}
+              fill={color}
+              fontSize="5"
+              fontFamily="IBM Plex Mono"
+            >
+              +
+            </text>
+          </>
+        );
+      case "pot_p1":
+      case "pot_p2":
+        return (
+          <>
+            <line
+              x1={2}
+              y1={cy}
+              x2={cx - 8}
+              y2={cy}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <rect
+              x={cx - 8}
+              y={cy - 4}
+              width={16}
+              height={8}
+              fill="none"
+              stroke={color}
+              strokeWidth={1.5}
+              rx={1}
+            />
+            <line
+              x1={cx + 8}
+              y1={cy}
+              x2={size - 2}
+              y2={cy}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={cx - 5}
+              y1={cy + 4}
+              x2={cx + 5}
+              y2={cy - 4}
+              stroke={color}
+              strokeWidth={1}
+            />
+            <polygon
+              points={`${cx + 5},${cy - 4} ${cx + 2},${cy - 4} ${cx + 5},${cy - 1}`}
+              fill={color}
+            />
+          </>
+        );
+      case "npn_power":
+        return (
+          <>
+            <circle
+              cx={cx}
+              cy={cy}
+              r={10}
+              fill="none"
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={cx - 10}
+              y1={cy}
+              x2={cx - 4}
+              y2={cy}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={cx - 4}
+              y1={cy - 7}
+              x2={cx - 4}
+              y2={cy + 7}
+              stroke={color}
+              strokeWidth={2}
+            />
+            <line
+              x1={cx - 4}
+              y1={cy - 4}
+              x2={cx + 7}
+              y2={cy - 10}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={cx - 4}
+              y1={cy + 4}
+              x2={cx + 7}
+              y2={cy + 10}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <text
+              x={cx + 2}
+              y={cy + 3}
+              textAnchor="middle"
+              fill={color}
+              fontSize="5"
+              fontFamily="IBM Plex Mono"
+            >
+              Q1
+            </text>
+          </>
+        );
+      case "screw_term_2pin":
+        return (
+          <>
+            <rect
+              x={6}
+              y={4}
+              width={24}
+              height={size - 8}
+              fill="none"
+              stroke={color}
+              strokeWidth={1.5}
+              rx={1}
+            />
+            <circle
+              cx={cx}
+              cy={cy - 7}
+              r={4}
+              fill="none"
+              stroke={color}
+              strokeWidth={1.2}
+            />
+            <line
+              x1={cx - 2}
+              y1={cy - 7}
+              x2={cx + 2}
+              y2={cy - 7}
+              stroke={color}
+              strokeWidth={1}
+            />
+            <circle
+              cx={cx}
+              cy={cy + 7}
+              r={4}
+              fill="none"
+              stroke={color}
+              strokeWidth={1.2}
+            />
+            <line
+              x1={cx - 2}
+              y1={cy + 7}
+              x2={cx + 2}
+              y2={cy + 7}
+              stroke={color}
+              strokeWidth={1}
+            />
+            <line
+              x1={0}
+              y1={cy - 7}
+              x2={6}
+              y2={cy - 7}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={0}
+              y1={cy + 7}
+              x2={6}
+              y2={cy + 7}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+          </>
+        );
+      case "switch_spst":
+      case "switch_timer":
+        return (
+          <>
+            <line
+              x1={2}
+              y1={cy}
+              x2={cx - 10}
+              y2={cy}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <circle cx={cx - 10} cy={cy} r={2.5} fill={color} />
+            <circle cx={cx + 10} cy={cy} r={2.5} fill={color} />
+            <line
+              x1={cx - 7}
+              y1={cy}
+              x2={cx + 7}
+              y2={cy - 8}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={cx + 10}
+              y1={cy}
+              x2={size - 2}
+              y2={cy}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <text
+              x={cx}
+              y={cy + 14}
+              textAnchor="middle"
+              fill={color}
+              fontSize="6"
+              fontFamily="IBM Plex Mono"
+            >
+              {item.id === "switch_spst" ? "S1" : "S2"}
+            </text>
+          </>
+        );
       default:
         return (
           <rect

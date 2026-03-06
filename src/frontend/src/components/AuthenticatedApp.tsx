@@ -21,24 +21,23 @@ export default function AuthenticatedApp({ children }: AuthenticatedAppProps) {
     isError: profileError,
   } = useGetCallerUserProfile();
 
-  // Safety valve: if profile loading takes >8 s, proceed anyway.
+  // Safety valve: if profile loading takes >5 s, proceed anyway.
   // The ProfileSetupModal handles the "no profile yet" case.
   const [profileTimedOut, setProfileTimedOut] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated || !profileLoading) {
-      setProfileTimedOut(false);
-      return;
-    }
-    const id = setTimeout(() => setProfileTimedOut(true), 8000);
+    // Reset timeout whenever authentication state or loading state changes
+    setProfileTimedOut(false);
+    if (!isAuthenticated || !profileLoading) return;
+    const id = setTimeout(() => setProfileTimedOut(true), 5000);
     return () => clearTimeout(id);
   }, [isAuthenticated, profileLoading]);
 
+  // Exit loading immediately on error — no need to wait for the timeout
+  const profileResolved = isFetched || profileTimedOut || profileError;
+
   const showProfileSetup =
-    isAuthenticated &&
-    !profileLoading &&
-    (isFetched || profileTimedOut || profileError) &&
-    !userProfile;
+    isAuthenticated && !profileLoading && profileResolved && !userProfile;
 
   // Show loading while initializing auth
   if (isInitializing) {
@@ -154,8 +153,8 @@ export default function AuthenticatedApp({ children }: AuthenticatedAppProps) {
     );
   }
 
-  // Authenticated but loading profile (with timeout escape hatch)
-  if (profileLoading && !profileTimedOut) {
+  // Authenticated but loading profile — also stop spinner immediately on error
+  if (profileLoading && !profileTimedOut && !profileError) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
