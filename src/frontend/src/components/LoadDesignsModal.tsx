@@ -57,7 +57,7 @@ export default function LoadDesignsModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-md border-border"
+        className="w-[92vw] max-w-md border-border"
         style={{
           background: "oklch(0.17 0.01 160)",
           color: "oklch(0.92 0.02 160)",
@@ -104,12 +104,12 @@ export default function LoadDesignsModal({
           )}
 
           {!isLoading && designs && designs.length > 0 && (
-            <ScrollArea className="max-h-64">
+            <ScrollArea className="max-h-52 md:max-h-64">
               <div className="space-y-1 pr-2">
                 {designs.map((name) => (
                   <div
                     key={name}
-                    className="flex items-center justify-between group rounded px-3 py-2.5 cursor-pointer transition-colors hover:bg-white/8"
+                    className="flex items-center justify-between group rounded px-3 py-3 md:py-2.5 cursor-pointer transition-colors hover:bg-white/8"
                     style={{ border: "1px solid oklch(0.28 0.02 160)" }}
                     onClick={() => handleLoad(name)}
                     onKeyDown={(e) => {
@@ -123,7 +123,7 @@ export default function LoadDesignsModal({
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="h-8 px-2 text-xs md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                         style={{ color: "oklch(0.72 0.16 85)" }}
                         onClick={() => handleLoad(name)}
                         disabled={loadDesignMutation.isPending}
@@ -133,7 +133,7 @@ export default function LoadDesignsModal({
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                        className="h-8 w-8 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
                         onClick={(e) => handleDelete(e, name)}
                         disabled={deleteDesignMutation.isPending}
                       >

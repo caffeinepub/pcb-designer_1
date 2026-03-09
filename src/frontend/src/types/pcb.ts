@@ -45,3 +45,25 @@ export interface ComponentLibraryItem {
   height: number; // grid cells tall
   color: string; // component body color for canvas rendering
 }
+
+// Wire types
+export interface PlacedWire {
+  id: number;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  color: string;
+  label: string; // empty string = no label
+  isEdgeTerminated: boolean; // true if end point is on canvas edge
+  edgeSide: "top" | "bottom" | "left" | "right" | null;
+}
+
+export const WIRE_COLORS = [
+  { name: "Red", value: "#ef4444" },
+  { name: "Black", value: "#1a1a1a" },
+  { name: "Green", value: "#22c55e" },
+  { name: "Yellow", value: "#eab308" },
+  { name: "Blue", value: "#3b82f6" },
+  { name: "White", value: "#f5f5f5" },
+] as const;

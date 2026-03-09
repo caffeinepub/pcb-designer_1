@@ -1,6 +1,6 @@
 import { CircuitBoard, Clock, Cpu, Loader2 } from "lucide-react";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useGetCallerUserProfile } from "../hooks/useQueries";
 import LoginButton from "./LoginButton";
@@ -13,6 +13,11 @@ interface AuthenticatedAppProps {
 export default function AuthenticatedApp({ children }: AuthenticatedAppProps) {
   const { identity, isInitializing } = useInternetIdentity();
   const isAuthenticated = !!identity;
+
+  // Latch: once we've seen the user as authenticated, never flash the login
+  // screen again during re-initialization cycles (e.g. authClient dep loop).
+  const wasEverAuthenticated = useRef(false);
+  if (isAuthenticated) wasEverAuthenticated.current = true;
 
   const {
     data: userProfile,
@@ -27,6 +32,10 @@ export default function AuthenticatedApp({ children }: AuthenticatedAppProps) {
 
   // Check for autologout flag from sessionStorage
   const [showAutologoutNotice, setShowAutologoutNotice] = useState(false);
+
+  // Welcome splash: show for at least 2 s after a brand-new profile is saved
+  const [showWelcomeSplash, setShowWelcomeSplash] = useState(false);
+  const welcomeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -46,14 +55,41 @@ export default function AuthenticatedApp({ children }: AuthenticatedAppProps) {
     return () => clearTimeout(id);
   }, [isAuthenticated, profileLoading]);
 
+  // Show welcome splash when profile first loads (new or returning user)
+  const prevUserProfile = useRef<typeof userProfile>(undefined);
+  useEffect(() => {
+    if (!prevUserProfile.current && userProfile) {
+      // Profile just appeared — show welcome splash for 2.5 s
+      setShowWelcomeSplash(true);
+      if (welcomeTimerRef.current) clearTimeout(welcomeTimerRef.current);
+      welcomeTimerRef.current = setTimeout(() => {
+        setShowWelcomeSplash(false);
+        welcomeTimerRef.current = null;
+      }, 2500);
+    }
+    prevUserProfile.current = userProfile;
+  }, [userProfile]);
+
+  // Clean up welcome timer on unmount only
+  useEffect(() => {
+    return () => {
+      if (welcomeTimerRef.current) clearTimeout(welcomeTimerRef.current);
+    };
+  }, []);
+
   // Exit loading immediately on error — no need to wait for the timeout
   const profileResolved = isFetched || profileTimedOut || profileError;
 
   const showProfileSetup =
-    isAuthenticated && !profileLoading && profileResolved && !userProfile;
+    isAuthenticated &&
+    !profileLoading &&
+    profileResolved &&
+    !userProfile &&
+    !showWelcomeSplash;
 
-  // Show loading while initializing auth
-  if (isInitializing) {
+  // Show loading while initializing auth — but only if we haven't already
+  // confirmed the user is authenticated (prevents login loop flicker).
+  if (isInitializing && !wasEverAuthenticated.current) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -72,8 +108,62 @@ export default function AuthenticatedApp({ children }: AuthenticatedAppProps) {
     );
   }
 
+  // Welcome splash screen — shown for 2.5 s after a new profile is created
+  if (showWelcomeSplash && isAuthenticated) {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center gap-6"
+        style={{ background: "oklch(0.12 0.01 160)" }}
+      >
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+          <svg width="100%" height="100%" aria-hidden="true">
+            <defs>
+              <pattern
+                id="grid-splash"
+                width="24"
+                height="24"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 24 0 L 0 0 0 24"
+                  fill="none"
+                  stroke="oklch(0.40 0.06 155)"
+                  strokeWidth="0.5"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-splash)" />
+          </svg>
+        </div>
+        <div className="relative z-10 flex flex-col items-center gap-4 text-center px-6">
+          <CircuitBoard
+            className="w-16 h-16 animate-pulse"
+            style={{ color: "oklch(0.72 0.16 85)" }}
+          />
+          <h1
+            className="text-3xl font-bold font-sans tracking-tight"
+            style={{ color: "oklch(0.92 0.02 160)" }}
+          >
+            Welcome to PCB Studio
+          </h1>
+          <p
+            className="text-sm font-mono"
+            style={{ color: "oklch(0.60 0.04 160)" }}
+          >
+            {userProfile?.name
+              ? `Hello, ${userProfile.name}!`
+              : "Your workspace is ready."}
+          </p>
+          <p className="text-xs text-muted-foreground/60 mt-2">
+            Loading your workspace...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Not authenticated — show login screen
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !wasEverAuthenticated.current) {
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center gap-8"

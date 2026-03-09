@@ -114,26 +114,27 @@ function ComponentIcon({ item }: { item: ComponentLibraryItem }) {
             <line
               x1={2}
               y1={cy}
-              x2={cx - 7}
+              x2={cx - 6}
               y2={cy}
               stroke={color}
               strokeWidth={1.5}
             />
             <polygon
-              points={`${cx - 7},${cy - 6} ${cx - 7},${cy + 6} ${cx + 7},${cy}`}
+              points={`${cx - 6},${cy - 7} ${cx - 6},${cy + 7} ${cx + 6},${cy}`}
               fill={color}
-              opacity={0.7}
+              stroke={color}
+              strokeWidth={1}
             />
             <line
-              x1={cx + 7}
-              y1={cy - 6}
-              x2={cx + 7}
-              y2={cy + 6}
+              x1={cx + 6}
+              y1={cy - 7}
+              x2={cx + 6}
+              y2={cy + 7}
               stroke={color}
               strokeWidth={2}
             />
             <line
-              x1={cx + 7}
+              x1={cx + 6}
               y1={cy}
               x2={size - 2}
               y2={cy}
@@ -148,64 +149,153 @@ function ComponentIcon({ item }: { item: ComponentLibraryItem }) {
             <line
               x1={2}
               y1={cy}
-              x2={cx - 7}
+              x2={cx - 6}
               y2={cy}
               stroke={color}
               strokeWidth={1.5}
             />
             <polygon
-              points={`${cx - 7},${cy - 6} ${cx - 7},${cy + 6} ${cx + 7},${cy}`}
+              points={`${cx - 6},${cy - 7} ${cx - 6},${cy + 7} ${cx + 6},${cy}`}
               fill={color}
-              opacity={0.8}
+              stroke={color}
+              strokeWidth={1}
             />
             <line
-              x1={cx + 7}
-              y1={cy - 6}
-              x2={cx + 7}
-              y2={cy + 6}
+              x1={cx + 6}
+              y1={cy - 7}
+              x2={cx + 6}
+              y2={cy + 7}
               stroke={color}
               strokeWidth={2}
             />
             <line
-              x1={cx + 7}
+              x1={cx + 6}
               y1={cy}
               x2={size - 2}
               y2={cy}
               stroke={color}
               strokeWidth={1.5}
             />
+            {/* Light rays */}
             <line
-              x1={cx + 4}
-              y1={cy - 8}
-              x2={cx + 10}
+              x1={cx + 2}
+              y1={cy - 9}
+              x2={cx + 6}
               y2={cy - 13}
               stroke={color}
               strokeWidth={1}
             />
             <line
-              x1={cx + 7}
+              x1={cx + 6}
               y1={cy - 8}
-              x2={cx + 13}
-              y2={cy - 13}
+              x2={cx + 11}
+              y2={cy - 11}
               stroke={color}
               strokeWidth={1}
             />
           </>
         );
-      case "npn":
-      case "pnp":
+      case "zener":
         return (
           <>
-            <circle
-              cx={cx}
-              cy={cy}
-              r={10}
+            <line
+              x1={2}
+              y1={cy}
+              x2={cx - 6}
+              y2={cy}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <polygon
+              points={`${cx - 6},${cy - 7} ${cx - 6},${cy + 7} ${cx + 6},${cy}`}
+              fill={color}
+              stroke={color}
+              strokeWidth={1}
+            />
+            {/* Zener bar with bends */}
+            <path
+              d={`M${cx + 6},${cy - 7} L${cx + 6},${cy + 7} L${cx + 9},${cy + 9} M${cx + 6},${cy - 7} L${cx + 3},${cy - 9}`}
               fill="none"
+              stroke={color}
+              strokeWidth={2}
+            />
+            <line
+              x1={cx + 6}
+              y1={cy}
+              x2={size - 2}
+              y2={cy}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+          </>
+        );
+      case "npn":
+        return (
+          <>
+            {/* Base lead */}
+            <line
+              x1={2}
+              y1={cy}
+              x2={cx - 4}
+              y2={cy}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            {/* Vertical base line */}
+            <line
+              x1={cx - 4}
+              y1={cy - 9}
+              x2={cx - 4}
+              y2={cy + 9}
+              stroke={color}
+              strokeWidth={2}
+            />
+            {/* Collector lead */}
+            <line
+              x1={cx - 4}
+              y1={cy - 6}
+              x2={cx + 6}
+              y2={cy - 11}
               stroke={color}
               strokeWidth={1.5}
             />
             <line
-              x1={cx - 10}
+              x1={cx + 6}
+              y1={cy - 11}
+              x2={cx + 6}
+              y2={2}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            {/* Emitter lead with arrow */}
+            <line
+              x1={cx - 4}
+              y1={cy + 6}
+              x2={cx + 6}
+              y2={cy + 11}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            {/* Arrow on emitter */}
+            <polygon
+              points={`${cx + 2},${cy + 8} ${cx + 7},${cy + 13} ${cx + 8},${cy + 7}`}
+              fill={color}
+            />
+            <line
+              x1={cx + 6}
+              y1={cy + 11}
+              x2={cx + 6}
+              y2={size - 2}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+          </>
+        );
+      case "pnp":
+        return (
+          <>
+            <line
+              x1={2}
               y1={cy}
               x2={cx - 4}
               y2={cy}
@@ -214,66 +304,192 @@ function ComponentIcon({ item }: { item: ComponentLibraryItem }) {
             />
             <line
               x1={cx - 4}
-              y1={cy - 7}
+              y1={cy - 9}
               x2={cx - 4}
-              y2={cy + 7}
+              y2={cy + 9}
               stroke={color}
               strokeWidth={2}
             />
             <line
               x1={cx - 4}
-              y1={cy - 4}
-              x2={cx + 7}
-              y2={cy - 10}
+              y1={cy - 6}
+              x2={cx + 6}
+              y2={cy - 11}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={cx + 6}
+              y1={cy - 11}
+              x2={cx + 6}
+              y2={2}
               stroke={color}
               strokeWidth={1.5}
             />
             <line
               x1={cx - 4}
-              y1={cy + 4}
-              x2={cx + 7}
-              y2={cy + 10}
+              y1={cy + 6}
+              x2={cx + 6}
+              y2={cy + 11}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            {/* Arrow on collector (pointing inward) */}
+            <polygon
+              points={`${cx},${cy - 8} ${cx - 5},${cy - 9} ${cx - 3},${cy - 4}`}
+              fill={color}
+            />
+            <line
+              x1={cx + 6}
+              y1={cy + 11}
+              x2={cx + 6}
+              y2={size - 2}
               stroke={color}
               strokeWidth={1.5}
             />
           </>
         );
-      case "vreg":
+      case "mosfet-n":
+      case "mosfet-p": {
+        const isP = item.id === "mosfet-p";
         return (
           <>
-            <rect
-              x={cx - 10}
-              y={cy - 12}
-              width={20}
-              height={24}
-              fill="none"
+            <line
+              x1={2}
+              y1={cy}
+              x2={cx - 6}
+              y2={cy}
               stroke={color}
               strokeWidth={1.5}
-              rx={1}
             />
             <line
-              x1={cx - 10}
+              x1={cx - 6}
+              y1={cy - 8}
+              x2={cx - 6}
+              y2={cy + 8}
+              stroke={color}
+              strokeWidth={2}
+            />
+            <line
+              x1={cx - 2}
+              y1={cy - 8}
+              x2={cx - 2}
+              y2={cy - 2}
+              stroke={color}
+              strokeWidth={2}
+            />
+            <line
+              x1={cx - 2}
               y1={cy - 5}
-              x2={cx - 16}
+              x2={cx + 8}
               y2={cy - 5}
               stroke={color}
               strokeWidth={1.5}
             />
             <line
-              x1={cx - 10}
+              x1={cx + 8}
+              y1={cy - 5}
+              x2={cx + 8}
+              y2={2}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={cx - 2}
+              y1={cy + 2}
+              x2={cx - 2}
+              y2={cy + 8}
+              stroke={color}
+              strokeWidth={2}
+            />
+            <line
+              x1={cx - 2}
               y1={cy + 5}
-              x2={cx - 16}
+              x2={cx + 8}
               y2={cy + 5}
               stroke={color}
               strokeWidth={1.5}
             />
             <line
-              x1={cx + 10}
-              y1={cy}
-              x2={cx + 16}
-              y2={cy}
+              x1={cx + 8}
+              y1={cy + 5}
+              x2={cx + 8}
+              y2={size - 2}
               stroke={color}
               strokeWidth={1.5}
+            />
+            {isP ? (
+              <circle cx={cx - 8} cy={cy} r={2} fill={color} />
+            ) : (
+              <polygon
+                points={`${cx - 2},${cy} ${cx + 4},${cy - 4} ${cx + 4},${cy + 4}`}
+                fill={color}
+              />
+            )}
+          </>
+        );
+      }
+      case "ne555":
+      case "ic-generic": {
+        const w = size - 8;
+        const h = size - 8;
+        return (
+          <>
+            <rect
+              x={4}
+              y={4}
+              width={w}
+              height={h}
+              fill="none"
+              stroke={color}
+              strokeWidth={1.5}
+              rx={2}
+            />
+            <text
+              x={size / 2}
+              y={size / 2 + 4}
+              textAnchor="middle"
+              fill={color}
+              fontSize="8"
+              fontFamily="monospace"
+            >
+              {item.id === "ne555" ? "555" : "IC"}
+            </text>
+          </>
+        );
+      }
+      case "opamp":
+        return (
+          <>
+            <polygon
+              points={`6,${cy - 12} 6,${cy + 12} ${size - 4},${cy}`}
+              fill="none"
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            <line
+              x1={6}
+              y1={cy - 6}
+              x2={12}
+              y2={cy - 6}
+              stroke={color}
+              strokeWidth={1}
+            />
+            <line
+              x1={9}
+              y1={cy - 9}
+              x2={9}
+              y2={cy - 3}
+              stroke={color}
+              strokeWidth={1}
+            />
+            <line
+              x1={6}
+              y1={cy + 6}
+              x2={12}
+              y2={cy + 6}
+              stroke={color}
+              strokeWidth={1}
             />
           </>
         );
@@ -281,187 +497,40 @@ function ComponentIcon({ item }: { item: ComponentLibraryItem }) {
         return (
           <>
             <line
-              x1={cx}
-              y1={2}
-              x2={cx}
-              y2={cy - 8}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <rect
-              x={cx - 6}
-              y={cy - 8}
-              width={12}
-              height={16}
-              fill="none"
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <line
-              x1={cx}
-              y1={cy + 8}
-              x2={cx}
-              y2={size - 2}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-          </>
-        );
-      case "ic_dip8":
-      case "ic_dip14":
-      case "ic_dip16": {
-        const pins = item.id === "ic_dip8" ? 4 : item.id === "ic_dip14" ? 5 : 6;
-        return (
-          <>
-            <rect
-              x={8}
-              y={4}
-              width={20}
-              height={size - 8}
-              fill={color}
-              opacity={0.2}
-              stroke={color}
-              strokeWidth={1.5}
-              rx={1}
-            />
-            {Array.from({ length: Math.min(pins, 4) }).map((_, i) => {
-              const libPinKey = `lib-dip-pin-${String(i)}`;
-              return (
-                <React.Fragment key={libPinKey}>
-                  <line
-                    x1={0}
-                    y1={6 + i * 7}
-                    x2={8}
-                    y2={6 + i * 7}
-                    stroke={color}
-                    strokeWidth={1.5}
-                  />
-                  <line
-                    x1={28}
-                    y1={6 + i * 7}
-                    x2={36}
-                    y2={6 + i * 7}
-                    stroke={color}
-                    strokeWidth={1.5}
-                  />
-                </React.Fragment>
-              );
-            })}
-          </>
-        );
-      }
-      case "conn_2pin":
-      case "conn_4pin":
-      case "conn_8pin": {
-        const pins =
-          item.id === "conn_2pin" ? 2 : item.id === "conn_4pin" ? 4 : 6;
-        const spacing = (size - 8) / (Math.min(pins, 6) - 1);
-        return (
-          <>
-            <rect
-              x={8}
-              y={4}
-              width={20}
-              height={size - 8}
-              fill="none"
-              stroke={color}
-              strokeWidth={1.5}
-              rx={1}
-            />
-            {Array.from({ length: Math.min(pins, 6) }).map((_, i) => {
-              const libConnKey = `lib-conn-pin-${String(i)}`;
-              return (
-                <React.Fragment key={libConnKey}>
-                  <circle
-                    cx={cx}
-                    cy={4 + i * spacing}
-                    r={2.5}
-                    fill={color}
-                    opacity={0.8}
-                  />
-                  <line
-                    x1={0}
-                    y1={4 + i * spacing}
-                    x2={8}
-                    y2={4 + i * spacing}
-                    stroke={color}
-                    strokeWidth={1.5}
-                  />
-                </React.Fragment>
-              );
-            })}
-          </>
-        );
-      }
-      case "pushbutton":
-        return (
-          <>
-            <line
               x1={2}
               y1={cy}
-              x2={cx - 8}
+              x2={cx - 7}
               y2={cy}
               stroke={color}
               strokeWidth={1.5}
             />
-            <line
-              x1={cx - 8}
-              y1={cy - 6}
-              x2={cx - 8}
-              y2={cy + 6}
-              stroke={color}
-              strokeWidth={2}
-            />
-            <line
-              x1={cx + 8}
-              y1={cy - 6}
-              x2={cx + 8}
-              y2={cy + 6}
-              stroke={color}
-              strokeWidth={2}
-            />
-            <line
-              x1={cx - 8}
-              y1={cy - 6}
-              x2={cx + 8}
-              y2={cy - 6}
-              stroke={color}
-              strokeWidth={1.5}
-              strokeDasharray="2,2"
-            />
-            <line
-              x1={cx + 8}
-              y1={cy}
-              x2={size - 2}
-              y2={cy}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-          </>
-        );
-      case "switch":
-        return (
-          <>
-            <line
-              x1={2}
-              y1={cy}
-              x2={cx - 10}
-              y2={cy}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <circle cx={cx - 10} cy={cy} r={2.5} fill={color} />
-            <circle cx={cx + 10} cy={cy} r={2.5} fill={color} />
             <line
               x1={cx - 7}
-              y1={cy}
-              x2={cx + 7}
-              y2={cy - 8}
+              y1={cy - 6}
+              x2={cx - 7}
+              y2={cy + 6}
+              stroke={color}
+              strokeWidth={2}
+            />
+            <rect
+              x={cx - 5}
+              y={cy - 6}
+              width={10}
+              height={12}
+              fill="none"
               stroke={color}
               strokeWidth={1.5}
             />
             <line
-              x1={cx + 10}
+              x1={cx + 5}
+              y1={cy - 6}
+              x2={cx + 5}
+              y2={cy + 6}
+              stroke={color}
+              strokeWidth={2}
+            />
+            <line
+              x1={cx + 5}
               y1={cy}
               x2={size - 2}
               y2={cy}
@@ -470,160 +539,10 @@ function ComponentIcon({ item }: { item: ComponentLibraryItem }) {
             />
           </>
         );
-      // Tesla Coil components
-      case "ne555": {
-        const ne555Pins = 4;
+      case "potentiometer":
         return (
           <>
-            <rect
-              x={8}
-              y={4}
-              width={20}
-              height={size - 8}
-              fill={color}
-              opacity={0.2}
-              stroke={color}
-              strokeWidth={1.5}
-              rx={1}
-            />
-            <path
-              d={`M${cx - 6},4 Q${cx},8 ${cx + 6},4`}
-              fill="none"
-              stroke={color}
-              strokeWidth={1}
-            />
-            {Array.from({ length: ne555Pins }).map((_, i) => {
-              const ne555LibKey = `lib-ne555-pin-${String(i)}`;
-              return (
-                <React.Fragment key={ne555LibKey}>
-                  <line
-                    x1={0}
-                    y1={6 + i * 7}
-                    x2={8}
-                    y2={6 + i * 7}
-                    stroke={color}
-                    strokeWidth={1.5}
-                  />
-                  <line
-                    x1={28}
-                    y1={6 + i * 7}
-                    x2={36}
-                    y2={6 + i * 7}
-                    stroke={color}
-                    strokeWidth={1.5}
-                  />
-                </React.Fragment>
-              );
-            })}
-            <text
-              x={cx}
-              y={cy + 3}
-              textAnchor="middle"
-              fill={color}
-              fontSize="6"
-              fontFamily="IBM Plex Mono"
-              fontWeight="600"
-            >
-              555
-            </text>
-          </>
-        );
-      }
-      case "cap_ceramic_100nf":
-      case "cap_ceramic_10nf":
-        return (
-          <>
-            <line
-              x1={cx}
-              y1={2}
-              x2={cx}
-              y2={cy - 4}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <line
-              x1={cx - 8}
-              y1={cy - 4}
-              x2={cx + 8}
-              y2={cy - 4}
-              stroke={color}
-              strokeWidth={2}
-            />
-            <line
-              x1={cx - 8}
-              y1={cy + 4}
-              x2={cx + 8}
-              y2={cy + 4}
-              stroke={color}
-              strokeWidth={2}
-            />
-            <line
-              x1={cx}
-              y1={cy + 4}
-              x2={cx}
-              y2={size - 2}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <text
-              x={cx + 10}
-              y={cy - 1}
-              fill={color}
-              fontSize="5"
-              fontFamily="IBM Plex Mono"
-            >
-              {item.id === "cap_ceramic_100nf" ? "100n" : "10n"}
-            </text>
-          </>
-        );
-      case "cap_elec_100uf":
-        return (
-          <>
-            <line
-              x1={cx}
-              y1={2}
-              x2={cx}
-              y2={cy - 4}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <line
-              x1={cx - 8}
-              y1={cy - 4}
-              x2={cx + 8}
-              y2={cy - 4}
-              stroke={color}
-              strokeWidth={2}
-            />
-            <path
-              d={`M${cx - 8},${cy + 4} Q${cx},${cy + 1} ${cx + 8},${cy + 4}`}
-              fill="none"
-              stroke={color}
-              strokeWidth={2}
-            />
-            <line
-              x1={cx}
-              y1={cy + 4}
-              x2={cx}
-              y2={size - 2}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <text
-              x={cx + 10}
-              y={cy - 1}
-              fill={color}
-              fontSize="5"
-              fontFamily="IBM Plex Mono"
-            >
-              +
-            </text>
-          </>
-        );
-      case "pot_p1":
-      case "pot_p2":
-        return (
-          <>
+            {/* Resistor body */}
             <line
               x1={2}
               y1={cy}
@@ -650,193 +569,115 @@ function ComponentIcon({ item }: { item: ComponentLibraryItem }) {
               stroke={color}
               strokeWidth={1.5}
             />
+            {/* Arrow wiper */}
             <line
-              x1={cx - 5}
-              y1={cy + 4}
-              x2={cx + 5}
+              x1={cx}
+              y1={cy - 10}
+              x2={cx}
               y2={cy - 4}
               stroke={color}
-              strokeWidth={1}
+              strokeWidth={1.5}
             />
             <polygon
-              points={`${cx + 5},${cy - 4} ${cx + 2},${cy - 4} ${cx + 5},${cy - 1}`}
+              points={`${cx - 3},${cy - 8} ${cx + 3},${cy - 8} ${cx},${cy - 4}`}
               fill={color}
             />
           </>
         );
-      case "npn_power":
-        return (
-          <>
-            <circle
-              cx={cx}
-              cy={cy}
-              r={10}
-              fill="none"
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <line
-              x1={cx - 10}
-              y1={cy}
-              x2={cx - 4}
-              y2={cy}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <line
-              x1={cx - 4}
-              y1={cy - 7}
-              x2={cx - 4}
-              y2={cy + 7}
-              stroke={color}
-              strokeWidth={2}
-            />
-            <line
-              x1={cx - 4}
-              y1={cy - 4}
-              x2={cx + 7}
-              y2={cy - 10}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <line
-              x1={cx - 4}
-              y1={cy + 4}
-              x2={cx + 7}
-              y2={cy + 10}
-              stroke={color}
-              strokeWidth={1.5}
-            />
-            <text
-              x={cx + 2}
-              y={cy + 3}
-              textAnchor="middle"
-              fill={color}
-              fontSize="5"
-              fontFamily="IBM Plex Mono"
-            >
-              Q1
-            </text>
-          </>
-        );
-      case "screw_term_2pin":
+      case "screw-terminal":
         return (
           <>
             <rect
-              x={6}
-              y={4}
-              width={24}
-              height={size - 8}
+              x={cx - 10}
+              y={cy - 9}
+              width={20}
+              height={18}
               fill="none"
               stroke={color}
               strokeWidth={1.5}
-              rx={1}
+              rx={2}
             />
             <circle
-              cx={cx}
-              cy={cy - 7}
-              r={4}
+              cx={cx - 4}
+              cy={cy}
+              r={3}
               fill="none"
               stroke={color}
-              strokeWidth={1.2}
-            />
-            <line
-              x1={cx - 2}
-              y1={cy - 7}
-              x2={cx + 2}
-              y2={cy - 7}
-              stroke={color}
-              strokeWidth={1}
+              strokeWidth={1.5}
             />
             <circle
-              cx={cx}
-              cy={cy + 7}
-              r={4}
+              cx={cx + 4}
+              cy={cy}
+              r={3}
               fill="none"
               stroke={color}
-              strokeWidth={1.2}
+              strokeWidth={1.5}
             />
             <line
-              x1={cx - 2}
-              y1={cy + 7}
-              x2={cx + 2}
-              y2={cy + 7}
+              x1={cx - 4}
+              y1={cy - 3}
+              x2={cx - 4}
+              y2={cy + 3}
               stroke={color}
               strokeWidth={1}
             />
             <line
-              x1={0}
-              y1={cy - 7}
-              x2={6}
-              y2={cy - 7}
+              x1={cx + 4}
+              y1={cy - 3}
+              x2={cx + 4}
+              y2={cy + 3}
               stroke={color}
-              strokeWidth={1.5}
-            />
-            <line
-              x1={0}
-              y1={cy + 7}
-              x2={6}
-              y2={cy + 7}
-              stroke={color}
-              strokeWidth={1.5}
+              strokeWidth={1}
             />
           </>
         );
-      case "switch_spst":
-      case "switch_timer":
+      case "switch":
         return (
           <>
             <line
               x1={2}
               y1={cy}
-              x2={cx - 10}
+              x2={cx - 8}
               y2={cy}
               stroke={color}
               strokeWidth={1.5}
             />
-            <circle cx={cx - 10} cy={cy} r={2.5} fill={color} />
-            <circle cx={cx + 10} cy={cy} r={2.5} fill={color} />
+            <circle cx={cx - 8} cy={cy} r={2} fill={color} />
+            <circle cx={cx + 8} cy={cy} r={2} fill={color} />
             <line
-              x1={cx - 7}
+              x1={cx - 8}
               y1={cy}
-              x2={cx + 7}
-              y2={cy - 8}
+              x2={cx + 6}
+              y2={cy - 7}
               stroke={color}
               strokeWidth={1.5}
             />
             <line
-              x1={cx + 10}
+              x1={cx + 8}
               y1={cy}
               x2={size - 2}
               y2={cy}
               stroke={color}
               strokeWidth={1.5}
             />
-            <text
-              x={cx}
-              y={cy + 14}
-              textAnchor="middle"
-              fill={color}
-              fontSize="6"
-              fontFamily="IBM Plex Mono"
-            >
-              {item.id === "switch_spst" ? "S1" : "S2"}
-            </text>
           </>
         );
-      default:
+      default: {
+        const w = size - 8;
+        const h = size - 8;
         return (
           <rect
             x={4}
             y={4}
-            width={size - 8}
-            height={size - 8}
+            width={w}
+            height={h}
             fill="none"
             stroke={color}
             strokeWidth={1.5}
             rx={2}
           />
         );
+      }
     }
   };
 
@@ -846,6 +687,7 @@ function ComponentIcon({ item }: { item: ComponentLibraryItem }) {
       height={size}
       viewBox={`0 0 ${size} ${size}`}
       className="flex-shrink-0"
+      style={{ overflow: "visible" }}
       aria-hidden="true"
     >
       {renderSymbol()}
@@ -853,7 +695,11 @@ function ComponentIcon({ item }: { item: ComponentLibraryItem }) {
   );
 }
 
-export default function ComponentLibrary() {
+interface ComponentLibraryProps {
+  onClose?: () => void;
+}
+
+export default function ComponentLibrary({ onClose }: ComponentLibraryProps) {
   const { activeComponentType, setActiveComponentType } = usePCBCanvas();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set(["Passives", "Semiconductors", "ICs", "Connectors"]),
@@ -870,15 +716,16 @@ export default function ComponentLibrary() {
 
   const handleSelect = (id: string) => {
     setActiveComponentType(activeComponentType === id ? null : id);
+    if (onClose) onClose();
   };
 
   return (
     <aside
-      className="w-56 flex flex-col border-r border-border"
+      className="w-56 flex flex-col border-r border-border h-full"
       style={{ background: "oklch(0.16 0.01 160)" }}
     >
-      {/* Header */}
-      <div className="px-3 py-2.5 border-b border-border">
+      {/* Header - hidden in mobile sheet (sheet provides its own header) */}
+      <div className="px-3 py-2.5 border-b border-border hidden md:block">
         <h2 className="text-xs font-semibold tracking-widest uppercase text-muted-foreground font-sans">
           Components
         </h2>
@@ -915,7 +762,7 @@ export default function ComponentLibrary() {
                           type="button"
                           key={item.id}
                           onClick={() => handleSelect(item.id)}
-                          className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-left transition-all ${
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 md:py-1.5 text-left transition-all ${
                             isActive
                               ? "bg-amber-DEFAULT/15 border-l-2 border-amber-DEFAULT"
                               : "border-l-2 border-transparent hover:bg-white/5 hover:border-white/20"

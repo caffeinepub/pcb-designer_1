@@ -1,6 +1,11 @@
 import type React from "react";
 import { createContext, useCallback, useContext, useReducer } from "react";
-import type { PCBPosition, PCBRotation, PlacedComponent } from "../types/pcb";
+import type {
+  PCBPosition,
+  PCBRotation,
+  PlacedComponent,
+  PlacedWire,
+} from "../types/pcb";
 
 export interface BoardSize {
   label: string;
@@ -15,6 +20,15 @@ interface PCBCanvasState {
   designName: string;
   nextId: number;
   boardSize: BoardSize | null;
+  editMode: boolean;
+  // Wire state
+  placedWires: PlacedWire[];
+  nextWireId: number;
+  wireMode: boolean;
+  activeWireColor: string;
+  selectedWireId: number | null;
+  // Eraser mode
+  eraserMode: boolean;
 }
 
 type PCBCanvasAction =
@@ -30,9 +44,43 @@ type PCBCanvasAction =
       payload: { components: PlacedComponent[]; name: string };
     }
   | { type: "CLEAR_CANVAS" }
-  | { type: "SET_BOARD_SIZE"; payload: { boardSize: BoardSize | null } };
+  | { type: "SET_BOARD_SIZE"; payload: { boardSize: BoardSize | null } }
+  | { type: "SET_EDIT_MODE"; payload: { value: boolean } }
+  // Wire actions
+  | { type: "ADD_WIRE"; payload: Omit<PlacedWire, "id"> }
+  | { type: "REMOVE_WIRE"; payload: { id: number } }
+  | { type: "SELECT_WIRE"; payload: { id: number | null } }
+  | { type: "SET_WIRE_MODE"; payload: { value: boolean } }
+  | { type: "SET_ACTIVE_WIRE_COLOR"; payload: { color: string } }
+  | { type: "LOAD_WIRES"; payload: { wires: PlacedWire[] } }
+  | { type: "CLEAR_WIRES" }
+  // Eraser action
+  | { type: "SET_ERASER_MODE"; payload: { value: boolean } }
+  // Undo
+  | { type: "UNDO" };
 
-function reducer(
+// Actions that push a snapshot to history (undoable)
+const UNDOABLE_ACTIONS = new Set([
+  "ADD_COMPONENT",
+  "UPDATE_COMPONENT",
+  "ROTATE_COMPONENT",
+  "REMOVE_COMPONENT",
+  "ADD_WIRE",
+  "REMOVE_WIRE",
+  "LOAD_DESIGN",
+  "LOAD_WIRES",
+  "CLEAR_CANVAS",
+  "CLEAR_WIRES",
+]);
+
+const MAX_HISTORY = 50;
+
+interface HistoryState {
+  past: PCBCanvasState[];
+  present: PCBCanvasState;
+}
+
+function presentReducer(
   state: PCBCanvasState,
   action: PCBCanvasAction,
 ): PCBCanvasState {
@@ -114,14 +162,128 @@ function reducer(
         activeComponentType: null,
         designName: "Untitled Board",
         nextId: 1,
+        placedWires: [],
+        nextWireId: 1,
+        selectedWireId: null,
+        wireMode: false,
+        eraserMode: false,
       };
     }
     case "SET_BOARD_SIZE": {
       return { ...state, boardSize: action.payload.boardSize };
     }
+    case "SET_EDIT_MODE": {
+      return { ...state, editMode: action.payload.value };
+    }
+    // Wire cases
+    case "ADD_WIRE": {
+      const newWire: PlacedWire = {
+        ...action.payload,
+        id: state.nextWireId,
+      };
+      return {
+        ...state,
+        placedWires: [...state.placedWires, newWire],
+        nextWireId: state.nextWireId + 1,
+        selectedWireId: newWire.id,
+      };
+    }
+    case "REMOVE_WIRE": {
+      return {
+        ...state,
+        placedWires: state.placedWires.filter(
+          (w) => w.id !== action.payload.id,
+        ),
+        selectedWireId:
+          state.selectedWireId === action.payload.id
+            ? null
+            : state.selectedWireId,
+      };
+    }
+    case "SELECT_WIRE": {
+      return { ...state, selectedWireId: action.payload.id };
+    }
+    case "SET_WIRE_MODE": {
+      return {
+        ...state,
+        wireMode: action.payload.value,
+        // Deactivate component placement when wire mode is on
+        activeComponentType: action.payload.value
+          ? null
+          : state.activeComponentType,
+        selectedId: null,
+        selectedWireId: null,
+        // Turn off eraser when wire mode activates
+        eraserMode: action.payload.value ? false : state.eraserMode,
+      };
+    }
+    case "SET_ACTIVE_WIRE_COLOR": {
+      return { ...state, activeWireColor: action.payload.color };
+    }
+    case "LOAD_WIRES": {
+      const maxWireId = action.payload.wires.reduce(
+        (max, w) => Math.max(max, w.id),
+        0,
+      );
+      return {
+        ...state,
+        placedWires: action.payload.wires,
+        nextWireId: maxWireId + 1,
+        selectedWireId: null,
+      };
+    }
+    case "CLEAR_WIRES": {
+      return {
+        ...state,
+        placedWires: [],
+        nextWireId: 1,
+        selectedWireId: null,
+      };
+    }
+    case "SET_ERASER_MODE": {
+      return {
+        ...state,
+        eraserMode: action.payload.value,
+        // Turn off wire mode when eraser activates
+        wireMode: action.payload.value ? false : state.wireMode,
+      };
+    }
     default:
       return state;
   }
+}
+
+function historyReducer(
+  historyState: HistoryState,
+  action: PCBCanvasAction,
+): HistoryState {
+  if (action.type === "UNDO") {
+    if (historyState.past.length === 0) return historyState;
+    const previous = historyState.past[historyState.past.length - 1];
+    const newPast = historyState.past.slice(0, -1);
+    return {
+      past: newPast,
+      present: previous,
+    };
+  }
+
+  const newPresent = presentReducer(historyState.present, action);
+
+  // Non-undoable actions: just update present without pushing history
+  if (!UNDOABLE_ACTIONS.has(action.type)) {
+    return { ...historyState, present: newPresent };
+  }
+
+  // Undoable action: push current present to past
+  const newPast = [
+    ...historyState.past.slice(-(MAX_HISTORY - 1)),
+    historyState.present,
+  ];
+
+  return {
+    past: newPast,
+    present: newPresent,
+  };
 }
 
 const initialState: PCBCanvasState = {
@@ -131,6 +293,20 @@ const initialState: PCBCanvasState = {
   designName: "Untitled Board",
   nextId: 1,
   boardSize: null,
+  editMode: false,
+  // Wire state defaults
+  placedWires: [],
+  nextWireId: 1,
+  wireMode: false,
+  activeWireColor: "#ef4444",
+  selectedWireId: null,
+  // Eraser mode default
+  eraserMode: false,
+};
+
+const initialHistoryState: HistoryState = {
+  past: [],
+  present: initialState,
 };
 
 interface PCBCanvasContextValue extends PCBCanvasState {
@@ -146,6 +322,20 @@ interface PCBCanvasContextValue extends PCBCanvasState {
   rotateSelected: () => void;
   deleteSelected: () => void;
   setBoardSize: (size: BoardSize | null) => void;
+  setEditMode: (value: boolean) => void;
+  // Wire actions
+  addWire: (wire: Omit<PlacedWire, "id">) => void;
+  removeWire: (id: number) => void;
+  selectWire: (id: number | null) => void;
+  setWireMode: (value: boolean) => void;
+  setActiveWireColor: (color: string) => void;
+  loadWires: (wires: PlacedWire[]) => void;
+  clearWires: () => void;
+  // Eraser
+  setEraserMode: (value: boolean) => void;
+  // Undo
+  undo: () => void;
+  canUndo: boolean;
 }
 
 const PCBCanvasContext = createContext<PCBCanvasContextValue | undefined>(
@@ -153,7 +343,13 @@ const PCBCanvasContext = createContext<PCBCanvasContextValue | undefined>(
 );
 
 export function PCBCanvasProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [historyState, dispatch] = useReducer(
+    historyReducer,
+    initialHistoryState,
+  );
+
+  const state = historyState.present;
+  const canUndo = historyState.past.length > 0;
 
   const addComponent = useCallback((component: Omit<PlacedComponent, "id">) => {
     dispatch({ type: "ADD_COMPONENT", payload: component });
@@ -210,6 +406,46 @@ export function PCBCanvasProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_BOARD_SIZE", payload: { boardSize: size } });
   }, []);
 
+  const setEditMode = useCallback((value: boolean) => {
+    dispatch({ type: "SET_EDIT_MODE", payload: { value } });
+  }, []);
+
+  const addWire = useCallback((wire: Omit<PlacedWire, "id">) => {
+    dispatch({ type: "ADD_WIRE", payload: wire });
+  }, []);
+
+  const removeWire = useCallback((id: number) => {
+    dispatch({ type: "REMOVE_WIRE", payload: { id } });
+  }, []);
+
+  const selectWire = useCallback((id: number | null) => {
+    dispatch({ type: "SELECT_WIRE", payload: { id } });
+  }, []);
+
+  const setWireMode = useCallback((value: boolean) => {
+    dispatch({ type: "SET_WIRE_MODE", payload: { value } });
+  }, []);
+
+  const setActiveWireColor = useCallback((color: string) => {
+    dispatch({ type: "SET_ACTIVE_WIRE_COLOR", payload: { color } });
+  }, []);
+
+  const loadWires = useCallback((wires: PlacedWire[]) => {
+    dispatch({ type: "LOAD_WIRES", payload: { wires } });
+  }, []);
+
+  const clearWires = useCallback(() => {
+    dispatch({ type: "CLEAR_WIRES" });
+  }, []);
+
+  const setEraserMode = useCallback((value: boolean) => {
+    dispatch({ type: "SET_ERASER_MODE", payload: { value } });
+  }, []);
+
+  const undo = useCallback(() => {
+    dispatch({ type: "UNDO" });
+  }, []);
+
   return (
     <PCBCanvasContext.Provider
       value={{
@@ -226,6 +462,17 @@ export function PCBCanvasProvider({ children }: { children: React.ReactNode }) {
         rotateSelected,
         deleteSelected,
         setBoardSize,
+        setEditMode,
+        addWire,
+        removeWire,
+        selectWire,
+        setWireMode,
+        setActiveWireColor,
+        loadWires,
+        clearWires,
+        setEraserMode,
+        undo,
+        canUndo,
       }}
     >
       {children}
